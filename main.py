@@ -1,34 +1,28 @@
 import tkinter as tk
 from tkinter import filedialog, ttk
 from image_list import ImageList
-from Image_display import ImageDisplay
+from image_display import ImageDisplay
 from image_grouping import ImageGrouping
+from key_events import KeyEvents
 
 class ViewerWindow(tk.Tk):
+
     def __init__(self):
         super().__init__()
-
         # ウィンドウの大きさを設定
         self.geometry("800x600")
         self.title("画像分類アプリ")
+        self.create_menu() # メニューバーの作成
+        self.create_separators() # Separatorの作成
+        self.create_image_display() # 画像表示エリアの作成
+        self.create_image_list() # 画像一覧エリアの作成
+        self.create_image_grouping() # 画像分類エリアの作成
+        #self.open_folder_dialog() # フォルダ選択ダイアログが自動で開かれるようにする
+        self.key_events = KeyEvents(self, self.image_display, self.image_list) # キーイベントの設定
 
-        # メニューバーの作成
-        self.create_menu()
+        self.bind("<F1>", lambda event: self.print_focused_widget())  # F1 キーを押すとフォーカスされているウィジェットを表示
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-        # Separatorの作成
-        self.create_separators()
-
-        # 画像一覧エリアの作成
-        self.create_image_list()
-
-        # 画像表示エリアの作成
-        self.create_image_display()
- 
-        # 画像分類エリアの作成
-        self.create_image_grouping()
-
-        # フォルダ選択ダイアログが自動で開かれるようにする
-        self.open_folder_dialog()
 
     # メニューバーを作成する関数
     def create_menu(self):
@@ -57,7 +51,8 @@ class ViewerWindow(tk.Tk):
 
     # 画像一覧エリアを作成する関数
     def create_image_list(self):
-        self.image_list = ImageList(self)
+        self.current_image_path = [""]
+        self.image_list = ImageList(self, current_image_path=self.current_image_path, image_display=self.image_display)
         self.image_list.place(rely=0, relx=0, relwidth=0.5, relheight=0.8, anchor='nw')
 
     # 画像表示エリアを作成する関数
@@ -75,11 +70,18 @@ class ViewerWindow(tk.Tk):
         folder_path = filedialog.askdirectory()
         if folder_path:
             self.image_list.populate_treeview(folder_path)
-            # 一番上の画像を選択する
-            first_item = self.image_list.tree.get_children()[0]
-            self.image_list.tree.selection_set(first_item)
+
+    def print_focused_widget(self, event=None):
+        focused_widget = self.focus_get()
+        if not focused_widget:
+            print("No focused widget. Setting focus to Treeview.")
             self.image_list.tree.focus_set()
-            self.image_list.tree.focus(first_item)
+        else:
+            print(f"Focused widget: {focused_widget}")
+
+    def on_closing(self):
+        self.image_grouping.save_config()
+        self.destroy()
 
 if __name__ == "__main__":
     app = ViewerWindow()
