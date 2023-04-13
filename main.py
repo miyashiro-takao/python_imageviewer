@@ -6,7 +6,6 @@ from image_grouping import ImageGrouping
 from key_events import KeyEvents
 
 class ViewerWindow(tk.Tk):
-
     def __init__(self):
         super().__init__()
         # ウィンドウの大きさを設定
@@ -22,6 +21,18 @@ class ViewerWindow(tk.Tk):
 
         self.bind("<F1>", lambda event: self.print_focused_widget())  # F1 キーを押すとフォーカスされているウィジェットを表示
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        # キーバインディングを設定して、指定されたキーが押されたときに move_image 関数が呼び出されるようにします。
+        # self.bind_all('z', lambda event: self.move_image(current_image_path, self.folder_name_vars, 0))
+        # self.bind_all('Z', lambda event: self.move_image(current_image_path, self.folder_name_vars, 0))
+        # self.bind_all('x', lambda event: self.move_image(current_image_path, self.folder_name_vars, 1))
+        # self.bind_all('X', lambda event: self.move_image(current_image_path, self.folder_name_vars, 1))
+        # self.bind_all('c', lambda event: self.move_image(current_image_path, self.folder_name_vars, 2))
+        # self.bind_all('C', lambda event: self.move_image(current_image_path, self.folder_name_vars, 2))
+        # self.bind_all('v', lambda event: self.move_image(current_image_path, self.folder_name_vars, 3))
+        # self.bind_all('V', lambda event: self.move_image(current_image_path, self.folder_name_vars, 3))
+
+        self.bind_all('z', lambda event: self.image_list.move_image(0, self.image_grouping.folder_path_vars))
 
 
     # メニューバーを作成する関数
@@ -71,17 +82,23 @@ class ViewerWindow(tk.Tk):
         if folder_path:
             self.image_list.populate_treeview(folder_path)
 
-    def print_focused_widget(self, event=None):
-        focused_widget = self.focus_get()
-        if not focused_widget:
-            print("No focused widget. Setting focus to Treeview.")
-            self.image_list.tree.focus_set()
-        else:
-            print(f"Focused widget: {focused_widget}")
-
+    # ウィンドウが閉じられる前に呼び出される関数
     def on_closing(self):
-        self.image_grouping.save_config()
-        self.destroy()
+        self.image_grouping.save_config()  # ウィンドウが閉じられる前に設定ファイルを保存
+        self.destroy()  # ウィンドウを破棄してアプリケーションを終了
+
+
+    # 現在フォーカスされているウィジェットを取得
+def print_focused_widget(self, event=None):
+
+    focused_widget = self.focus_get()
+    if not focused_widget: # フォーカスされているウィジェットがない場合、Treeviewにフォーカスを設定
+        print("No focused widget. Setting focus to Treeview.")
+        self.image_list.tree.focus_set()
+    else:
+        print(f"Focused widget: {focused_widget}") # フォーカスされているウィジェットの情報を表示
+
+
 
 if __name__ == "__main__":
     app = ViewerWindow()

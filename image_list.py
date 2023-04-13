@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 import os
 import math
 import datetime
+import shutil
 from image_display import ImageDisplay
 
 class ImageList(tk.Frame):
@@ -133,5 +134,22 @@ class ImageList(tk.Frame):
                 children = self.tree.get_children()
                 if children:
                     first_item = children[0]
-                    self.tree.selection_set(first_item)
+                    self.tree.selection_set(first_item) 
                     self.tree.focus(first_item)
+
+    # Treeviewで選択された画像を移動する関数
+    def move_image(self, index, folder_path_vars):
+        selected_item = self.tree.selection()[0]  # 選択されたアイテムのIDを取得
+        current_image_path = self.tree.item(selected_item, "values")[5]  # 選択されたアイテムのテキスト（画像パス）を取得
+        dest_folder_path = folder_path_vars[index].get()  # 移動先のフォルダを取得
+        if current_image_path and dest_folder_path:  # 現在の画像パスと選択されたフォルダが存在する場合
+            shutil.move(current_image_path, dest_folder_path)  # 画像を移動先のパスに移動
+            print(f"画像を移動しました: {current_image_path} -> {dest_folder_path}")  # 移動した画像の情報を表示
+            
+            next_item = self.tree.next(selected_item) # 次のアイテムを取得
+            if next_item: # 次のアイテムが存在する場合
+                self.tree.selection_set(next_item) # 次のアイテムを選択
+                self.tree.focus(next_item) # 次のアイテムにフォーカスを設定
+                self.on_treeview_select(None) # 次のアイテムを表示
+            
+            self.tree.delete(selected_item) # 画像一覧から削除
