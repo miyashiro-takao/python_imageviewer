@@ -11,7 +11,7 @@ from tkinter import ttk
 
 from PIL import Image
 
-SUPPORTED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif"}
+from .configuration import get_supported_extensions
 
 
 class ImageList(tk.Frame):
@@ -73,8 +73,10 @@ class ImageList(tk.Frame):
         self.tree.delete(*self.tree.get_children())
         self.current_folder = folder
 
+        supported_extensions = {ext.lower() for ext in get_supported_extensions()}
+
         for file_path in sorted(folder.rglob("*")):
-            if file_path.suffix.lower() not in SUPPORTED_EXTENSIONS:
+            if file_path.suffix.lower() not in supported_extensions:
                 continue
 
             with Image.open(file_path) as img:
@@ -173,6 +175,9 @@ class ImageList(tk.Frame):
             return
 
         full_path = Path(self.tree.item(selection[0], "values")[5])
+        if index >= len(folder_path_vars):
+            return
+
         destination_folder = Path(folder_path_vars[index].get())
 
         if not destination_folder:

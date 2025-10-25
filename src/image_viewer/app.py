@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import tkinter as tk
+from pathlib import Path
 from tkinter import filedialog, ttk
 
+from .configuration import get_config, get_last_opened_directory, set_last_opened_directory
 from .image_display import ImageDisplay
 from .image_grouping import ImageGrouping
 from .image_list import ImageList
@@ -20,8 +22,11 @@ class ViewerWindow(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
 
-        self.title(self.TITLE)
-        self.geometry(self.DEFAULT_GEOMETRY)
+        config = get_config()
+        viewer_config = config.get("viewer", {})
+
+        self.title(viewer_config.get("title", self.TITLE))
+        self.geometry(viewer_config.get("default_geometry", self.DEFAULT_GEOMETRY))
 
         self.image_display: ImageDisplay | None = None
         self.image_list: ImageList | None = None
@@ -29,6 +34,7 @@ class ViewerWindow(tk.Tk):
         self.key_events: KeyEvents | None = None
 
         self._build_ui()
+        self._load_initial_directory()
         self._configure_bindings()
 
     def _build_ui(self) -> None:
@@ -87,11 +93,25 @@ class ViewerWindow(tk.Tk):
         if self.image_list and self.image_grouping:
             self.image_list.move_image(folder_index, self.image_grouping.folder_path_vars)
 
+    def _load_initial_directory(self) -> None:
+        """設定済みのフォルダがあれば起動時に読み込む。"""
+        if not self.image_list:
+            return
+
+        initial_dir = get_last_opened_directory()
+        if not initial_dir:
+            return
+
+        folder_path = Path(initial_dir)
+        if folder_path.exists():
+            self.image_list.populate_treeview(folder_path)
+
     def open_folder_dialog(self) -> None:
         """フォルダ選択ダイアログを開き、一覧を読み込む。"""
-        folder_path = filedialog.askdirectory()
+        folder_path = filedialog.askdirectory(initialdir=get_last_opened_directory() or None)
         if folder_path and self.image_list:
             self.image_list.populate_treeview(folder_path)
+            set_last_opened_directory(folder_path)
 
     def on_closing(self) -> None:
         """ウィンドウを閉じる前に設定を保存する。"""
